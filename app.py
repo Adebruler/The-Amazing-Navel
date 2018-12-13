@@ -67,7 +67,7 @@ def sample_metadata(sample):
     # Create a dictionary entry for each row of metadata information
     sample_metadata = {}
     for result in results:
-        sample_metadata["sample"] = result[0]
+        sample_metadata["SAMPLEID"] = result[0]
         sample_metadata["ETHNICITY"] = result[1]
         sample_metadata["GENDER"] = result[2]
         sample_metadata["AGE"] = result[3]

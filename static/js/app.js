@@ -1,29 +1,85 @@
 function buildMetadata(sample) {
-
-  // @TODO: Complete the following function that builds the metadata panel
-
   // Use `d3.json` to fetch the metadata for a sample
-    // Use d3 to select the panel with id of `#sample-metadata`
+  var sampleMetadata = d3.json(`/metadata/${sample}`).then(function(response){
+    // Use d3 to select the Sample MetaData panel
+    var metaPanel = d3.select("#sample-metadata")
 
-    // Use `.html("") to clear any existing metadata
+    // Clear any existing metadata
+    metaPanel.html("")
 
-    // Use `Object.entries` to add each key and value pair to the panel
-    // Hint: Inside the loop, you will need to use d3 to append new
-    // tags for each key-value in the metadata.
-
+    // add metaData to panel
+    Object.entries(response).forEach(function([key,value]) {
+      metaPanel.append('p').text(`${key}: ${value}`)
+    });
+  });
     // BONUS: Build the Gauge Chart
-    // buildGauge(data.WFREQ);
+    // buildGauge(response.WFREQ);
 }
 
 function buildCharts(sample) {
 
-  // @TODO: Use `d3.json` to fetch the sample data for the plots
+  // Use `d3.json` to fetch the sample data for the plots
+  var sampleMetadata = d3.json(`/samples/${sample}`).then(function(response){
+    // Build a Bubble Chart using the sample data
+    bubbleTrace = {
+      x: response.otu_ids,
+      y: response.sample_values,
+      mode: 'markers',
+      marker:{
+          size: response.sample_values,
+          color: response.otu_ids
+      },
+      text: response.otu_labels
+    };
 
-    // @TODO: Build a Bubble Chart using the sample data
+    bubbleLayout={
+      xaxis: {title: "Species Id"},
+      yaxis: {title: "Species Count"},
+      title: "Culture Population"
+    };
 
-    // @TODO: Build a Pie Chart
+    Plotly.newPlot('bubble',[bubbleTrace],bubbleLayout)
+    // Build a Pie Chart of top 10 species
+    // Transpose json to object for easier sorting
+    var data = [];
+    for(var i=0; i<response.otu_ids.length; i++){
+      data.push({
+        "otu_ids":response.otu_ids[i],
+        "sample_values":response.sample_values[i],
+        "otu_labels":response.otu_labels[i]
+      })
+    }
+
+    // Sort and slice
+    var sortedData = data.sort((a,b) => b.sample_values - a.sample_values);
+    var top10Data = sortedData.slice(0,10);
+
+    // Transpose back for easier graphing
+    var top10 = {otu_ids:[],sample_values:[],otu_labels:[]};
+    for (i=0 ;i<10; i++){
+      top10.otu_ids.push(top10Data[i].otu_ids);
+      top10.sample_values.push(top10Data[i].sample_values);
+      top10.otu_labels.push(top10Data[i].otu_labels);
+    };
+
+    pieTrace = {
+      labels: top10.otu_ids,
+      values: top10.sample_values,
+      text: top10.otu_labels,
+      type: 'pie',
+      hoverinfo: 'text',
+      textinfo: 'percent'
+    };
+
+    pieLayout={
+      title: "Top 10 Species"
+    };
+
+    Plotly.newPlot('pie',[pieTrace],pieLayout)
     // HINT: You will need to use slice() to grab the top 10 sample_values,
     // otu_ids, and labels (10 each).
+
+  });
 }
 
 function init() {
@@ -44,6 +100,7 @@ function init() {
     buildCharts(firstSample);
     buildMetadata(firstSample);
   });
+
 }
 
 function optionChanged(newSample) {
