@@ -11,9 +11,79 @@ function buildMetadata(sample) {
     Object.entries(response).forEach(function([key,value]) {
       metaPanel.append('p').text(`${key}: ${value}`)
     });
+    // Build the Gauge Chart
+    buildGauge(response.WFREQ);
   });
-    // BONUS: Build the Gauge Chart
-    // buildGauge(response.WFREQ);
+}
+
+function buildGauge(wfreq){
+  // Trig to calc meter point
+  var degrees = 171 - wfreq*18,
+       radius = .5;
+  var radians = degrees * Math.PI / 180;
+  var x = radius * Math.cos(radians);
+  var y = radius * Math.sin(radians);
+
+  // Path: may have to change to create a better triangle
+  var mainPath = 'M -.0 -0.025 L .0 0.025 L ',
+       pathX = String(x),
+       space = ' ',
+       pathY = String(y),
+       pathEnd = ' Z';
+  var path = mainPath.concat(pathX,space,pathY,pathEnd);
+
+  var data = [{ type: 'scatter',
+     x: [0], y:[0],
+      marker: {size: 28, color:'850000'},
+      showlegend: false,
+      text: wfreq,
+      hoverinfo: 'text'},
+    { values: [50/10, 50/10, 50/10, 50/10, 50/10, 50/10,
+      50/10, 50/10, 50/10, 50/10, 50],
+    rotation: 90,
+    text: ['9', '8', '7', '6', '5', '4', '3', '2', '1', '0', ''],
+    textinfo: 'text',
+    textposition:'inside',
+    marker: {colors:[
+      'rgba(14, 127, 0, .5)',
+      'rgba(38, 138, 22, .5)',
+      'rgba(62, 149, 44, .5)',
+      'rgba(86, 160, 67, .5)',
+      'rgba(110, 171, 89, .5)',
+      'rgba(135, 182, 112, .5)',
+      'rgba(159, 193, 134, .5)',
+      'rgba(183, 204, 157, .5)',
+      'rgba(207, 215, 179, .5)',
+      'rgba(232, 226, 202, .5)',
+
+      'rgba(255, 255, 255, 0)']},
+    labels: ['9', '8', '7', '6', '5', '4', '3', '2', '1', '0', ''],
+    hoverinfo: 'label',
+    hole: .5,
+    type: 'pie',
+    showlegend: false
+  }];
+
+  var layout = {
+    shapes:[{
+        type: 'path',
+        path: path,
+        fillcolor: '850000',
+        line: {
+          color: '850000'
+        }
+      }],
+    title: "<b>Belly Button Washing Frequency</b> <br> Scrubs per Week",
+    // height: 1000,
+    // width: 1000,
+    xaxis: {zeroline:false, showticklabels:false,
+               showgrid: false, range: [-1, 1]},
+    yaxis: {zeroline:false, showticklabels:false,
+               showgrid: false, range: [-1, 1]}
+  };
+
+  Plotly.newPlot('gauge', data, layout);
+
 }
 
 function buildCharts(sample) {
@@ -35,7 +105,7 @@ function buildCharts(sample) {
     bubbleLayout={
       xaxis: {title: "Species Id"},
       yaxis: {title: "Species Count"},
-      title: "Culture Population"
+      title: "<b>Culture Population</b>"
     };
 
     Plotly.newPlot('bubble',[bubbleTrace],bubbleLayout)
@@ -72,13 +142,10 @@ function buildCharts(sample) {
     };
 
     pieLayout={
-      title: "Top 10 Species"
+      title: "<b>Top 10 Species</b>"
     };
 
     Plotly.newPlot('pie',[pieTrace],pieLayout)
-    // HINT: You will need to use slice() to grab the top 10 sample_values,
-    // otu_ids, and labels (10 each).
-
   });
 }
 
